@@ -9,6 +9,7 @@ rat-pack: concatenates mean and median outputs from s-r into a more readable for
 
 rat-pack-max: concatenates max outputs from s-r.
 
+----
 
 the timebins are as follows (and modifiable):
 
@@ -20,6 +21,7 @@ shock (5s after tone)
 
 post-shock (30s after shock time bin)
 
+----
 
 there are a few issues i'm working on, mainly for the purposes of using a different paradigm (e.g. different number of tones, etc). that said, it should be modifiable to most ethovision raw data. i have a few notes for what to change when running on a different dataset, but it likely has gaps. please feel free to reach out - annajxli@gmail.com.
 
