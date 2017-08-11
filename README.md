@@ -23,6 +23,6 @@ post-shock (30s after shock time bin)
 
 ----
 
-there are a few issues i'm working on, mainly for the purposes of using a different paradigm (e.g. different number of tones, etc). that said, it should be modifiable to most ethovision raw data. i have a few notes for what to change when running on a different dataset, but it likely has gaps. please feel free to reach out - annajxli@gmail.com.
+there are a few issues i'm working on, mainly for the purposes of using a different paradigm (e.g. different number of tones, etc). that said, it should be modifiable to most ethovision raw data. i have a few notes for what to change when running on a different dataset, but it likely has gaps. it's also rather poorly commented right now, which i will also fix eventually. please feel free to reach out - annajxli@gmail.com.
 
 originally created for the Shansky Lab, Northeastern University.
