@@ -5,9 +5,9 @@ this is a collection of jupyter notebooks that analyze raw data output from Etho
 
 scaredy-rat: main notebook; finds mean, median, and maximal velocities for timebins across the FC paradigm, generates a plot of velocity over time.
 
-rat-pack: concatenates mean and median outputs from s-r into a more readable format.
+rat-pack: concatenates mean and median outputs from scaredy-rat into a more readable format.
 
-rat-pack-max: concatenates max outputs from s-r.
+rat-pack-max: concatenates max outputs from scaredy-rat.
 
 ----
 
