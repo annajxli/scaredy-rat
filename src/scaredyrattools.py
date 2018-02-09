@@ -249,6 +249,23 @@ def scaredy_read_FC(csv_dir):
             medcsv.append(f)
     return(meancsv,SEMcsv,medcsv)
 
+def scaredy_read_ext(csv_dir):
+    meancsv = []
+    SEMcsv = []
+    medcsv = []
+
+    for file in os.listdir(csv_dir):
+        if file.startswith("ext-mean-"):
+            f = os.path.join(csv_dir, file)
+            meancsv.append(f)
+        if file.startswith("ext-SEM-"):
+            f = os.path.join(csv_dir, file)
+            SEMcsv.append(f)
+        if file.startswith("ext-med-"):
+            f = os.path.join(csv_dir,file)
+            medcsv.append(f)
+    return(meancsv,SEMcsv,medcsv)
+
 def get_anim(csv, n):
     m = re.split('[-.]', csv)
     anim = m[n]
