@@ -8,7 +8,7 @@ from IPython.display import display, HTML
 import math
 import time
 
-def animal_read(inpath, filename, sheet):
+def animal_read(inpath, filename, sheet, group=True, context=True, nrows=35, skiprows=36, anim_loc=32, group_loc=33, ctx_loc=10):
     '''
     Returns corresponding animals for sheets
     Reads data into dataframe with long header removed.
@@ -16,13 +16,18 @@ def animal_read(inpath, filename, sheet):
     Uses time as row indexes.
     '''
     filepath = os.path.join(inpath,filename)
-    df = pd.read_excel(filepath,sheetname=sheet,skip_footer=35,index_col=0)
-    group = df.iloc[33][0]
-    animal = df.iloc[32][0]
-    context = df.iloc[10][0]
-    print(filename + " " + sheet + " is " + animal + " in " + context)
+    df = pd.read_excel(filepath,sheetname=sheet,nrows=nrows,index_col=0)
+    animal = df.iloc[anim_loc][0]
+    if group != False:
+        group = df.iloc[group_loc][0]
+    if context != False:
+        context = df.iloc[ctx_loc][0]
+    if group != False and context != False:
+        print(filename + " " + sheet + " is " + animal + " in " + context)
+    else:
+        print("{} {} is {}".format(filename, sheet, animal))
 
-    df = pd.read_excel(filepath,sheetname=sheet,skiprows=36,index_col=0,headers=0)
+    df = pd.read_excel(filepath,sheetname=sheet,skiprows=skiprows,index_col=0,headers=0)
     df = df[1:]
     df.replace(to_replace='-',value=0,inplace=True)
     return(animal,context,group,df)
@@ -266,6 +271,23 @@ def scaredy_read_ext(csv_dir):
             medcsv.append(f)
     return(meancsv,SEMcsv,medcsv)
 
+def scaredy_read_ext_ret(csv_dir):
+    meancsv = []
+    SEMcsv = []
+    medcsv = []
+
+    for file in os.listdir(csv_dir):
+        if file.startswith("ext-ret-mean-"):
+            f = os.path.join(csv_dir, file)
+            meancsv.append(f)
+        if file.startswith("ext-ret-SEM-"):
+            f = os.path.join(csv_dir, file)
+            SEMcsv.append(f)
+        if file.startswith("ext-ret-med-"):
+            f = os.path.join(csv_dir,file)
+            medcsv.append(f)
+    return(meancsv,SEMcsv,medcsv)
+
 def get_anim(csv, n):
     m = re.split('[-.]', csv)
     anim = m[n]
@@ -282,6 +304,18 @@ def compress_FC_data(csvlist,tbin):
     allanims = pd.DataFrame()
     for csv in csvlist:
         anim = get_anim(csv,2)
+        df = pd.read_csv(csv,index_col=0).transpose()
+
+        tonevels = pd.DataFrame(df.iloc[tbin]).transpose()
+        tonevels.set_index([[anim]],inplace=True)
+
+        allanims = pd.concat([allanims,tonevels])
+    return(allanims)
+
+def compress_ext_ret_data(csvlist,tbin):
+    allanims = pd.DataFrame()
+    for csv in csvlist:
+        anim = get_anim(csv,3)
         df = pd.read_csv(csv,index_col=0).transpose()
 
         tonevels = pd.DataFrame(df.iloc[tbin]).transpose()
