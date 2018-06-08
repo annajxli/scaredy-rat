@@ -8,7 +8,7 @@ from IPython.display import display, HTML
 import math
 import time
 
-def animal_read(inpath, filename, sheet, group=True, context=True, nrows=35, skiprows=36, anim_loc=32, group_loc=33, ctx_loc=10):
+def animal_read(inpath, filename, sheet):
     '''
     Returns corresponding animals for sheets
     Reads data into dataframe with long header removed.
@@ -16,21 +16,21 @@ def animal_read(inpath, filename, sheet, group=True, context=True, nrows=35, ski
     Uses time as row indexes.
     '''
     filepath = os.path.join(inpath,filename)
-    df = pd.read_excel(filepath,sheetname=sheet,nrows=nrows,index_col=0)
+    df = pd.read_excel(filepath,sheetname=sheet,skip_footer=35,index_col=0)
+
+    anim_loc = df.index.get_loc('Animal ID')
     animal = df.iloc[anim_loc][0]
-    if group != False:
-        group = df.iloc[group_loc][0]
-    if context != False:
-        context = df.iloc[ctx_loc][0]
-    if group != False and context != False:
-        print(filename + " " + sheet + " is " + animal + " in " + context)
-    else:
-        print("{} {} is {}".format(filename, sheet, animal))
+
+    ctx_loc = df.index.get_loc('Trial Control settings')
+    context = df.iloc[ctx_loc][0]
+
+    skiprows = df.index.get_loc('Trial time') + 1
+    print("{} {} is {} in {}".format(filename, sheet, animal, context))
 
     df = pd.read_excel(filepath,sheetname=sheet,skiprows=skiprows,index_col=0,headers=0)
     df = df[1:]
     df.replace(to_replace='-',value=0,inplace=True)
-    return(animal,context,group,df)
+    return(animal,context,df)
 
 def find_tones(df, ntones):
     '''
@@ -237,6 +237,77 @@ def find_shock_vels(df, i):
 
     return(sresponse)
 
+def get_freezing(datadict, ntones, freezingThreshold, binSecs):
+    freezing = pd.DataFrame()
+    freezingSecs = 0
+    nonfreezingSecs = 0
+    freezingTimes = []
+
+    i = 1
+    while i <= ntones:
+        toneLabel = 'Tone {}'.format(str(i))
+
+        epoch = datadict[i]
+        vels = epoch['Velocity']
+
+        startSec = int(round(vels.index[0],0))
+        endSec = int(round(vels.index[-1],0))
+
+        for n in range(startSec, endSec-1, binSecs):
+            startOfSecond = vels.index.get_loc(n, method='bfill')
+            endOfSecond = vels.index.get_loc(n+(binSecs-0.1), method='bfill')
+            velsInSec = []
+            for frame in range(startOfSecond, endOfSecond):
+                velocity = float(vels.iloc[frame])
+                velsInSec.append(velocity)
+            if np.mean(velsInSec) < freezingThreshold:
+                freezingSecs += 1
+                freezingTimes.append([n,n+binSecs])
+            else:
+                nonfreezingSecs += 1
+
+        percentFreezing = round(freezingSecs/(freezingSecs + nonfreezingSecs),3)
+        toneFreezing = pd.DataFrame({toneLabel: [freezingSecs, nonfreezingSecs, percentFreezing]},index=['Freezing', 'Nonfreezing','Ratio']).T
+        freezing = pd.concat([freezing, toneFreezing])
+        freezingSecs = 0
+        nonfreezingSecs = 0
+        i += 1
+    return(freezing, freezingTimes)
+
+def get_darting(datadict, ntones, dartThreshold, binSecs):
+    darting = pd.DataFrame()
+    dartingTimes = []
+    nDarts = 0
+
+    i = 1
+    while i <= ntones:
+        toneLabel = 'Tone {}'.format(str(i))
+
+        epoch = datadict[i]
+        vels = epoch['Velocity']
+
+        startSec = int(round(vels.index[0],0))
+        endSec = int(round(vels.index[-1],0))
+
+        for n in range(startSec, endSec-1, binSecs):
+            startOfSecond = vels.index.get_loc(n, method='bfill')
+            endOfSecond = vels.index.get_loc(n+(binSecs-0.1), method='bfill')
+            velsInSec = []
+            for frame in range(startOfSecond, endOfSecond):
+                velocity = float(vels.iloc[frame])
+                velsInSec.append(velocity)
+            for v in velsInSec:
+                if v > dartThreshold:
+                    nDarts += 1
+                    dartingTimes.append([n,n+binSecs])
+                    break
+
+        toneDarting = pd.DataFrame({toneLabel: nDarts},index=['Darts']).T
+        darting = pd.concat([darting, toneDarting])
+        nDarts = 0
+        i += 1
+    return(darting, dartingTimes)
+
 def scaredy_read_FC(csv_dir):
     meancsv = []
     SEMcsv = []
@@ -253,6 +324,16 @@ def scaredy_read_FC(csv_dir):
             f = os.path.join(csv_dir,file)
             medcsv.append(f)
     return(meancsv,SEMcsv,medcsv)
+
+def scaredy_read_FC_max(csv_dir,prefix):
+    maxCSV = []
+
+    for root, dirs, names in os.walk(csv_dir):
+        for file in names:
+            if file.startswith(prefix):
+                f = os.path.join(root,file)
+                maxCSV.append(f)
+    return (maxCSV)
 
 def scaredy_read_ext(csv_dir):
     meancsv = []
@@ -287,6 +368,17 @@ def scaredy_read_ext_ret(csv_dir):
             f = os.path.join(csv_dir,file)
             medcsv.append(f)
     return(meancsv,SEMcsv,medcsv)
+
+def scaredy_read_freezing(csv_dir, prefix):
+    freezingcsv = []
+
+    for root, dirs, names in os.walk(csv_dir):
+        for file in names:
+            if file.startswith(prefix):
+                f = os.path.join(root, file)
+                freezingcsv.append(f)
+
+    return(freezingcsv)
 
 def get_anim(csv, n):
     m = re.split('[-.]', csv)
@@ -343,26 +435,48 @@ def concat_FC_data(means, SEMs, meds, ntones):
 
     return(allData)
 
-def scaredy_read_FC_max(csv_dir):
-    maxToneCSV = []
-    maxPretoneCSV = []
-    maxShockCSV = []
-    maxPostshockCSV = []
+def concat_all_FC_freezing(csvlist, tbin):
+    freezing = pd.DataFrame()
+    for csv in csvlist:
+        anim = get_anim(csv,2)
+        df = pd.read_csv(csv, index_col=0).T
+        loc = (tbin * 3) + 2
+        percentF = pd.DataFrame([df.iloc[loc]], index=[anim])
+        freezing = pd.concat([freezing, percentF])
 
-    for file in os.listdir(csv_dir):
-        if file.startswith("FC-tone-max-"):
-            f = os.path.join(csv_dir, file)
-            maxToneCSV.append(f)
-        if file.startswith("FC-pretone-max-"):
-            f = os.path.join(csv_dir, file)
-            maxPretoneCSV.append(f)
-        if file.startswith("FC-shock-max-"):
-            f = os.path.join(csv_dir,file)
-            maxShockCSV.append(f)
-        if file.startswith("FC-shock-max-"):
-            f = os.path.join(csv_dir,file)
-            maxPostshockCSV.append(f)
-    return(maxToneCSV, maxPretoneCSV, maxShockCSV, maxPostshockCSV)
+    return(freezing)
+
+def concat_all_FC_max(csvlist):
+    maxes = pd.DataFrame()
+
+    for csv in csvlist:
+        anim = get_anim(csv,4)
+        df = pd.read_csv(csv,index_col=0)
+        meanMax = pd.DataFrame({anim: df['Mean']}).T
+        maxes = pd.concat([maxes, meanMax])
+
+    return(maxes)
+
+def concat_all_FC_darting(csvlist, loc):
+    freezing = pd.DataFrame()
+    for csv in csvlist:
+        anim = get_anim(csv,2)
+        df = pd.read_csv(csv, index_col=0).T
+        percentF = pd.DataFrame([df.iloc[loc]], index=[anim])
+        freezing = pd.concat([freezing, percentF])
+
+    return(freezing)
+
+def concat_all_habituation_freezing(csvlist, tbin):
+    freezing = pd.DataFrame()
+    for csv in csvlist:
+        anim = get_anim(csv,3)
+        df = pd.read_csv(csv, index_col=0).T
+        loc = (tbin * 3) + 2
+        percentF = pd.DataFrame([df.iloc[loc]], index=[anim])
+        freezing = pd.concat([freezing, percentF])
+
+    return(freezing)
 
 def compress_FC_max_data(csvlist):
     anims = []
