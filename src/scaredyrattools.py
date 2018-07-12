@@ -308,23 +308,6 @@ def get_darting(datadict, ntones, dartThreshold, binSecs):
         i += 1
     return(darting, dartingTimes)
 
-def scaredy_read_FC(csv_dir):
-    meancsv = []
-    SEMcsv = []
-    medcsv = []
-
-    for file in os.listdir(csv_dir):
-        if file.startswith("FC-mean-"):
-            f = os.path.join(csv_dir, file)
-            meancsv.append(f)
-        if file.startswith("FC-SEM-"):
-            f = os.path.join(csv_dir, file)
-            SEMcsv.append(f)
-        if file.startswith("FC-med-"):
-            f = os.path.join(csv_dir,file)
-            medcsv.append(f)
-    return(meancsv,SEMcsv,medcsv)
-
 def scaredy_read_FC_max(csv_dir,prefix):
     maxCSV = []
 
@@ -369,23 +352,23 @@ def scaredy_read_ext_ret(csv_dir):
             medcsv.append(f)
     return(meancsv,SEMcsv,medcsv)
 
-def scaredy_read_freezing(csv_dir, prefix):
-    freezingcsv = []
+def scaredy_find_csvs(csv_dir, prefix):
+    csvlist = []
 
     for root, dirs, names in os.walk(csv_dir):
         for file in names:
             if file.startswith(prefix):
                 f = os.path.join(root, file)
-                freezingcsv.append(f)
+                csvlist.append(f)
 
-    return(freezingcsv)
+    return(csvlist)
 
 def get_anim(csv, n):
     m = re.split('[-.]', csv)
     anim = m[n]
     return(anim)
 
-def compress_FC_data(csvlist,tbin):
+def compress_data(csvlist,tbin):
     '''
     tbins:
     0 = tone
@@ -416,11 +399,11 @@ def compress_ext_ret_data(csvlist,tbin):
         allanims = pd.concat([allanims,tonevels])
     return(allanims)
 
-def concat_FC_data(means, SEMs, meds, ntones):
+def concat_data(means, SEMs, meds, ntones):
     allData = pd.DataFrame()
 
     for n in range(ntones):
-        allData = allData.append(means.iloc[:,n])
+        allData = allData.append(means.iloc[:,n],verify_integrity=False)
         allData = allData.append(SEMs.iloc[:,n])
         allData = allData.append(meds.iloc[:,n])
 
