@@ -385,6 +385,8 @@ def compress_data(csvlist,tbin):
         tonevels.set_index([[anim]],inplace=True)
 
         allanims = pd.concat([allanims,tonevels])
+        allanims = allanims.drop_duplicates()
+        
     return(allanims)
 
 def compress_ext_ret_data(csvlist,tbin):
@@ -403,7 +405,7 @@ def concat_data(means, SEMs, meds, ntones):
     allData = pd.DataFrame()
 
     for n in range(ntones):
-        allData = allData.append(means.iloc[:,n],verify_integrity=False)
+        allData = allData.append(means.iloc[:,n])
         allData = allData.append(SEMs.iloc[:,n])
         allData = allData.append(meds.iloc[:,n])
 
