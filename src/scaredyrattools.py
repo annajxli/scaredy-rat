@@ -378,21 +378,20 @@ def compress_data(csvlist,tbin):
     '''
     allanims = pd.DataFrame()
     for csv in csvlist:
-        anim = get_anim(csv,2)
+        anim = get_anim(csv,-2)
         df = pd.read_csv(csv,index_col=0).transpose()
 
         tonevels = pd.DataFrame(df.iloc[tbin]).transpose()
         tonevels.set_index([[anim]],inplace=True)
 
         allanims = pd.concat([allanims,tonevels])
-        allanims = allanims.drop_duplicates()
-        
+
     return(allanims)
 
 def compress_ext_ret_data(csvlist,tbin):
     allanims = pd.DataFrame()
     for csv in csvlist:
-        anim = get_anim(csv,3)
+        anim = get_anim(csv,-2)
         df = pd.read_csv(csv,index_col=0).transpose()
 
         tonevels = pd.DataFrame(df.iloc[tbin]).transpose()
@@ -423,7 +422,7 @@ def concat_data(means, SEMs, meds, ntones):
 def concat_all_FC_freezing(csvlist, tbin):
     freezing = pd.DataFrame()
     for csv in csvlist:
-        anim = get_anim(csv,2)
+        anim = get_anim(csv,-2)
         df = pd.read_csv(csv, index_col=0).T
         loc = (tbin * 3) + 2
         percentF = pd.DataFrame([df.iloc[loc]], index=[anim])
@@ -435,7 +434,7 @@ def concat_all_FC_max(csvlist):
     maxes = pd.DataFrame()
 
     for csv in csvlist:
-        anim = get_anim(csv,4)
+        anim = get_anim(csv,-2)
         df = pd.read_csv(csv,index_col=0)
         meanMax = pd.DataFrame({anim: df['Mean']}).T
         maxes = pd.concat([maxes, meanMax])
@@ -445,7 +444,7 @@ def concat_all_FC_max(csvlist):
 def concat_all_FC_darting(csvlist, loc):
     freezing = pd.DataFrame()
     for csv in csvlist:
-        anim = get_anim(csv,2)
+        anim = get_anim(csv,-2)
         df = pd.read_csv(csv, index_col=0).T
         percentF = pd.DataFrame([df.iloc[loc]], index=[anim])
         freezing = pd.concat([freezing, percentF])
@@ -455,7 +454,7 @@ def concat_all_FC_darting(csvlist, loc):
 def concat_all_habituation_freezing(csvlist, tbin):
     freezing = pd.DataFrame()
     for csv in csvlist:
-        anim = get_anim(csv,3)
+        anim = get_anim(csv,-2)
         df = pd.read_csv(csv, index_col=0).T
         loc = (tbin * 3) + 2
         percentF = pd.DataFrame([df.iloc[loc]], index=[anim])
@@ -468,7 +467,7 @@ def compress_FC_max_data(csvlist):
     maxVels = pd.DataFrame()
 
     for csv in csvlist:
-        anim = get_anim(csv,4)
+        anim = get_anim(csv,-2)
         anims.append(anim)
 
         df = pd.read_csv(csv,index_col=0).transpose()
